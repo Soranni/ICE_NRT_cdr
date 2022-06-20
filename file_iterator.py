@@ -32,7 +32,6 @@ class CDRiterator:
         self.retry_handler = None
         self.log_run = logging.getLogger("run")
         self.log_error = logging.getLogger("error")
-        self.lookup_conn = None
 
     def init_payload(self):
         # called for every line to set default values
@@ -89,12 +88,11 @@ class CDRiterator:
         self.payload["error_description"] = str("")
         
         
-    def run_file(self, file_name,p, db_conn_lookup):
-        self.log_run.info("Process: " + p + " - Handling file: " + file_name)
+    def run_file(self, file_name):
+        self.log_run.info("Process: " + file_name)
         if config.incoming != None:
             self.directory = config.incoming
         self.current_file_name = file_name
-        self.lookup_conn = db_conn_lookup
         self.current_file = self.directory + "/" + file_name
         modified_date = datetime.fromtimestamp((os.path.getmtime(self.current_file)))
         # Getting the date from the filename as age
@@ -134,13 +132,12 @@ class CDRiterator:
                     raise e        
                 
         write_to_db(self) # write the rest of the files to DB
-        print(self)
         if self.retry_lines != 0:
             with open(retry_file_name, "w+") as self.retry_handler:
                 for line in self.retry_list:
                     self.retry_handler.write(line +"\n")
         
-        self.log_run.info("Process: "+ p + " - Done file: " + file_name + " - Lines: " + str(self.line_counter) + " - errors: " + str(self.num_errors))
+        self.log_run.info("Done file: " + file_name + " - Lines: " + str(self.line_counter) + " - errors: " + str(self.num_errors))
         self.move_file()
 
     def move_file(self, end_location=config.done):
@@ -400,7 +397,7 @@ class CDRiterator:
         return next(filter(lambda c: c().infix() in file_name, subclasses), None)
 
     @staticmethod
-    def to_treatment(f, db_conn, db_conn_lookup,p):
+    def to_treatment(f):
         """
         Finding the right subclass to use for the file.
         Running a OtherFiles if not exists
@@ -408,13 +405,13 @@ class CDRiterator:
         class_init = CDRiterator.find_subclass_to_file(f)
         the_class = OtherFiles() if class_init == None else class_init()
         #config.conn = db_conn
-        the_class.run_file(f,p, db_conn_lookup)
+        the_class.run_file(f)
 
 class OtherFiles(CDRiterator):
     def __init__(self):
         super().__init__(the_infix="GENERIC")
 
-    def run_file(self, file_name,P):
+    def run_file(self, file_name):
         self.log_run.info("Generic file: " + file_name)
         
         if config.incoming != None:

@@ -1,8 +1,7 @@
 import config
 
 # Inserting values into DB
-insert_list = ["TYPE",
-"entry_id",	
+insert_list_calls = [	
 "brand_id",	
 "call_event",	
 "imsi",	
@@ -17,11 +16,8 @@ insert_list = ["TYPE",
 "supplementary_service_code",
 "dialled_digits",
 "connected_number",
-"connected_number_corrected",
 "calling_number",
-"calling_number_corrected",
 "third_party_number",
-"third_party_number_corrected",
 "access_point_name_ni",
 "access_point_name_oi",
 "data_volume_incoming",
@@ -40,25 +36,44 @@ insert_list = ["TYPE",
 "plmn",
 "nrtrde_file_id",
 "inserted",
-"modified",
-"error_description",
+"modified"
 ]
 
-insert_str = "INSERT INTO [ice_net$Buffer Table - Misc](" + ", ".join(insert_list) + ") VALUES(" + ("? ," * (len(insert_list) - 1)) + "?); "
-import csv
+
 def write_to_db(cdrIiterator):
     
     if len(cdrIiterator.bulk_lines) == 0:
         return
-    db_values = [[cdr_data[k] for k in insert_list] for cdr_data in cdrIiterator.bulk_lines ]
     
+    db_values_calls = []
+    db_values_imported = []
+    db_values_discarded = []
+    for cdr_data in cdrIiterator.bulk_lines:
+        if cdr_data["TYPE"] == "CALLS":
+            db_values_calls.append(cdr_data)
+        if cdr_data["TYPE"] == "IMPORTED":
+            db_values_imported.append(cdr_data)
+        if cdr_data["TYPE"] == "DISCARDED":
+            db_values_discarded.append(cdr_data)
     
+    for i in db_values_calls:
+        print("------------------------------------------------------")
+        insert_str = "INSERT INTO [ice_net$Buffer Table - Misc](" + ", ".join(insert_list_calls) + ") VALUES(" + ("? ," * (len(insert_list_calls) - 1)) + "?); "
+        print(i)
+        print(insert_str)
+        
+    
+    #print(db_values_discarded)
+    #print(db_values_imported)
+    
+    """
     with open("TEST1_48.csv", 'w') as f:
     #with open("TEST1_37.csv", 'w') as f:
         for i in db_values:
             for j in i:
                 f.write("%s;" %(j))
             f.write('\n')
+    """
     #cur = config.conn.cursor()
     #cur.fast_executemany = True
     #cur.executemany(insert_str,db_values)

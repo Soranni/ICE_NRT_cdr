@@ -1,18 +1,18 @@
 import psycopg2
 
 print("CONNECTIONG")
-conn = psycopg2.connect(
-    host="localhost",
-    database="nrt_test",
-    user="postgres",
-    password="Nizam2007")
+
+conn = psycopg2.connect("dbname=NRT_test user=postgres password=admin")
 
 cursor = conn.cursor()
 
-cursor.execute("select version()")
+postgreSQL_select_Query = """
+SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = 'calls';
+"""
+cursor.execute(postgreSQL_select_Query)
 
-data = cursor.fetchone()
-print("Connection established to: ", data)
+records = cursor.fetchall()
+print(records)
 
-conn.cloase()
+conn.close()
 print("CLOSED")

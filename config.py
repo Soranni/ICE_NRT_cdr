@@ -15,9 +15,6 @@ cdr_bulk_size_limit = 500
 
 env = None
 conn = None  # global db pool
-conn_lookup = None  # global db pool
-connlist = None  # global db pool
-connlist_lookup = None  # global db pool
 
 server = os.getenv('DB_SERVER')
 database = os.getenv('DB_DATABASE')

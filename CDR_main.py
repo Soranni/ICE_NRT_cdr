@@ -1,5 +1,5 @@
 import config
-import pyodbc
+import psycopg2
 import time
 import os
 from pathlib import Path
@@ -14,28 +14,14 @@ import lmdb
 
 import statistics
 
-def setup_db(P):
+def setup_db():
     """
     Setup of DB connetion 
     """
-    server = config.server
-    database = config.database
-    username = config.username
-    password = config.password
-    dsn = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=" + server + ";DATABASE=" + database + ";UID=" + username + ";PWD=" + password
-    p_list = [pyodbc.connect(dsn) for prc in range(P)]
-    return p_list
-
-def setup_db_lookup(P):
-    """
-    Setup of DB connetion 
-    """
-    server = 'BSS-P-SQL03'
-    database = 'ICE'
-    username ='svcfictst'
-    password='A138sinA@ab3'
-    dsn = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=" + server + ";DATABASE=" + database + ";UID=" + username + ";PWD=" + password
-    p_list = [pyodbc.connect(dsn) for prc in range(P)]
+    dsn = "dbname=NRT_test user=postgres password=admin"
+    
+    p_list = psycopg2.connect(dsn)
+    
     return p_list
 
 def setup_logging():
@@ -71,7 +57,7 @@ def split(a, n):
     k, m = divmod(len(a), n)
     return list((a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n)))
 
-def processing(files, conn, conn_lookup, p):
+def processing(files):
     """
     Calling CDRiterator.to_treatment for each file
     Args:
@@ -79,7 +65,7 @@ def processing(files, conn, conn_lookup, p):
         conn : Dsn connections string
         p : Prossecor number
     """
-    [CDRiterator.to_treatment(i,conn, conn_lookup, p) for i in files]
+    [CDRiterator.to_treatment(i) for i in files]
 
 def Args_guide():
     parser = argparse.ArgumentParser(description='Set number of processors.')
@@ -102,46 +88,26 @@ def main():
     print("multiprocessing.cpu_count(): " + str(multiprocessing.cpu_count()))
     killer = GracefulKiller()
    
-    config.env = lmdb.open('Temp_LMDB', map_size = 100000000) # max storage capicity = 100GB
     
     while not killer.kill_now:
-        #config.connlist = setup_db(nr_processors) # reset connetion strings
-        #config.connlist_lookup = setup_db_lookup(nr_processors) # reset connetion strings
+        config.conn = setup_db() # reset connetion strings
         
         log_run.info("Run: {}".format(i))
         incoming_files = [ os.path.basename(src_file) for src_file in  Path(config.incoming).glob("*.*")]
 
         t0 = time.time()
-        splited_fields = split(incoming_files, nr_processors)
         
-        #proc_list  = [multiprocessing.Process(target=processing, args=(splited_fields[prc],config.connlist[prc],config.connlist_lookup[prc],"P"+str(prc), )) for prc in range(nr_processors)]
-        # TEST
-        proc_list  = [multiprocessing.Process(target=processing, args=(splited_fields[prc],"","","P"+str(prc), )) for prc in range(nr_processors)]
-        
-        for process in proc_list:
-            process.start()
-            
-        for process in proc_list:
-            process.join()
+        processing(incoming_files)
         
         t1 = time.time()
         tim_c.append(t1-t0)
         print("RUNTIME: {}".format(t1-t0))
         log_run.info("RUNTIME: {}".format(t1-t0))
         time.sleep(config.iteration_time)
-        
         i += 1
         break
-    """
-    # INSIDE OR OUTSIDE WHILE LOOP ?
-    for connstr in config.connlist:
-        connstr.close()
-    for connstr in config.connlist_lookup:
-        connstr.close()
-    """
     
     #print(statistics.mean(tim_c))
-    config.env.close() 
     
     log_run.info("Stopping db pool")
     log_run.info("Stopping skript")
