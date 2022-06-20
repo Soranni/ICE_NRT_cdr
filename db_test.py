@@ -1,6 +1,11 @@
 import psycopg2
 
-conn = psycopg2.connect(database="nrt_test", user="postgres", password="Nizam2007", host="127.0.0.1", port ="5432")
+print("CONNECTIONG")
+conn = psycopg2.connect(
+    host="localhost",
+    database="nrt_test",
+    user="postgres",
+    password="Nizam2007")
 
 cursor = conn.cursor()
 
