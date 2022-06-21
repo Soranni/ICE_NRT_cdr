@@ -43,29 +43,13 @@ def setup_logging():
     logger.setLevel(logging.INFO)
     logger.info("Starting error handling")
 
-def split(a, n):
-    """
-    Reforming a array into equal sized nested array
-    Args:
-        a : Array
-        n : n nested arrays of a
-
-    Returns:
-        Nested array 
-    """
-    
-    k, m = divmod(len(a), n)
-    return list((a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n)))
-
 def processing(files):
     """
     Calling CDRiterator.to_treatment for each file
     Args:
         files : CDR file
-        conn : Dsn connections string
-        p : Prossecor number
     """
-    [CDRiterator.to_treatment(i) for i in files]
+    [CDRiterator.to_treatment(file) for file in files]
 
 def Args_guide():
     parser = argparse.ArgumentParser(description='Set number of processors.')
@@ -80,12 +64,10 @@ def main():
     Loop each file in incoming folder and run CDRiterator.to_treatment on each file
     """
     
-    nr_processors = Args_guide() # number of processors
     setup_logging()
     log_run = logging.getLogger("run")
     tim_c = []
     i = 0 
-    print("multiprocessing.cpu_count(): " + str(multiprocessing.cpu_count()))
     killer = GracefulKiller()
    
     
@@ -105,9 +87,9 @@ def main():
         log_run.info("RUNTIME: {}".format(t1-t0))
         time.sleep(config.iteration_time)
         i += 1
-        break
+        #break
     
-    #print(statistics.mean(tim_c))
+    print("MEAN RUN TIME: " , statistics.mean(tim_c))
     
     log_run.info("Stopping db pool")
     log_run.info("Stopping skript")

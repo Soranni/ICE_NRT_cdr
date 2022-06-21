@@ -3,11 +3,11 @@ import os
 # Environment variables for CDR
 incoming = "incoming"  # os.getenv('CDR_INCOMING_FILES')
 generic = "generic"  # os.getenv('CDR_GENERIC_FILES')
-debug = True # True
+debug = False # True
 retry = "retry"  # os.getenv('CDR_RETRY_FILES')
 done = "done"  # os.getenv('CDR_DONE_FILES')
 run_as_daemon = "True"  # os.getenv("CDR_RUN_AS_DAEMON") == 'True'
-move_files = "FTrue" == "True"  # os.getenv("CDR_MOVE_FILES") == 'True'
+move_files = "True" == "True"  # os.getenv("CDR_MOVE_FILES") == 'True'
 iteration_time = int("1")  # int(os.getenv("ITERATION_TIME"))
 
 # Other

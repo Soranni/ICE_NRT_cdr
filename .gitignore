@@ -1,3 +1,7 @@
 # IGNORE
 nrt_env/
 __pycache__/
+done/
+incoming/
+generic/
+logs/
